@@ -1,0 +1,60 @@
+{
+  "generatedAt": "2026-11-05T14:19:32.818Z",
+  "node": "v24.22.2",
+  "browser": "C:/Program Files/Google/Chrome/Application/chrome.exe",
+  "messages": 1000,
+  "steady": 30,
+  "burst": 200,
+  "fullRender": {
+    "count": 30,
+    "p50": 125.80000001192093,
+    "p95": 173.7999999821186,
+    "p99": 179.10000002384186,
+    "max": 203.5,
+    "mean": 131.61333333253862
+  },
+  "steadyAutoScroll": {
+    "count": 30,
+    "p50": 0.19999998807907104,
+    "p95": 0.30000001192092896,
+    "p99": 0.30000001192092896,
+    "max": 0.30000001192092896,
+    "mean": 0.19000000059604644
+  },
+  "steadyNoAutoScroll": {
+    "count": 30,
+    "p50": 0.19999998807907104,
+    "p95": 0.29999998211860657,
+    "p99": 0.29999998211860657,
+    "max": 0.4000000059604645,
+    "mean": 0.18666666547457378
+  },
+  "burstMs": 48.900000005960464,
+  "burstMetrics": {
+    "TaskDuration": 0.0677019999999997,
+    "ScriptDuration": 0.018942,
+    "LayoutDuration": 0.012972999999999901,
+    "RecalcStyleDuration": 0.0016260000000000163,
+    "LayoutCount": 1,
+    "RecalcStyleCount": 1,
+    "Nodes": 2002,
+    "JSEventListeners": 0,
+    "JSHeapUsedSize": -1076304
+  },
+  "roomSwitch": {
+    "ctfMs": 32.70000001788139,
+    "allMs": 116
+  },
+  "invariants": {
+    "nodeCount": 1000,
+    "visibleCount": 1000,
+    "countMatches": true,
+    "countMatchesBefore": true,
+    "unique": true,
+    "ascending": true,
+    "dayDividers": 1,
+    "emptyAbsent": true,
+    "markerSurvived": true,
+    "atBottom": true
+  }
+}

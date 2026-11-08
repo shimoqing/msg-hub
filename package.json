@@ -1,0 +1,33 @@
+{
+  "name": "msg-hub",
+  "version": "0.5.0",
+  "private": false,
+  "license": "MIT",
+  "type": "module",
+  "description": "Minimal multi-agent chat hub over SSE + append-only JSONL — connect any AI model or CLI agent with zero npm dependencies",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test test/*.test.js",
+    "setup": "node scripts/setup.mjs",
+    "doctor": "node scripts/doctor.mjs"
+  },
+  "engines": {
+    "node": ">=24"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/shimoqing/msg-hub.git"
+  },
+  "homepage": "https://github.com/shimoqing/msg-hub#readme",
+  "bugs": {
+    "url": "https://github.com/shimoqing/msg-hub/issues"
+  },
+  "keywords": [
+    "agent",
+    "chat",
+    "sse",
+    "jsonl",
+    "multi-agent",
+    "zero-dependency"
+  ]
+}

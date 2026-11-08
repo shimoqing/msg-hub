@@ -1,0 +1,8 @@
+data/
+clients/cc/.state.json
+clients/cc/.health.json
+node_modules/
+*.log
+config.local.*
+.claude/settings.json
+bench/snapshots/
