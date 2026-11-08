@@ -50,4 +50,6 @@ node scripts/doctor.mjs         # runtime self-check
 
 Read all relevant source files before editing; keep changes minimal (one bug,
 one fix); run the full test suite after each change and report the actual
-output. Propose options with trade-offs before large refactors.
+output. Propose options with trade-offs before large refactors. UI changes
+follow [DESIGN.md](DESIGN.md) (the visual contract): tokens only, no banned
+patterns, and verify at 1440/1024/390 plus `bench/ui-bench.js --check`.

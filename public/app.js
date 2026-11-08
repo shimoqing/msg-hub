@@ -1730,6 +1730,25 @@ function bind() {
       saveToken();
     }
   });
+  // The token dialog is aria-modal: trap Tab inside it, and allow Escape only
+  // when a token already exists (with none, the dialog is the only way in).
+  el.tokenModal.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") {
+      event.preventDefault();
+      if (state.token) hideTokenModal();
+      return;
+    }
+    if (event.key !== "Tab") return;
+    const first = el.tokenInput;
+    const last = $("token-save");
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
+  });
   el.attachBtn.addEventListener("click", () => el.fileInput.click());
   el.fileInput.addEventListener("change", () => {
     addFiles(el.fileInput.files);
