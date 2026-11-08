@@ -14,6 +14,9 @@ const HOP_RE = /\[hop:\d+\]/;
 const STATUS_MAX_TARGETS = 3;
 const GROUP_WINDOW_MS = 5 * 60 * 1000;
 const MAX_INPUT_HEIGHT = 168;
+// Keep this key in sync with the early-read script in index.html.
+const SIDE_COLLAPSED_KEY = "msghub.sideCollapsed";
+const AVATAR_TINTS = 6;
 
 const state = {
   token: "",
@@ -399,8 +402,9 @@ function hueOf(identity) {
 }
 
 function paintAvatar(node, identity) {
-  const hue = hueOf(identity);
-  node.style.background = `linear-gradient(140deg, hsl(${hue} 58% 62%), hsl(${(hue + 28) % 360} 52% 48%))`;
+  const tint = (hueOf(identity) % AVATAR_TINTS) + 1;
+  node.style.background = `var(--avatar-${tint}-bg)`;
+  node.style.color = `var(--avatar-${tint}-ink)`;
   node.textContent = labelOf(identity).slice(0, 1).toUpperCase();
   node.title = identity;
   node.setAttribute("aria-hidden", "true");
@@ -421,6 +425,19 @@ function presenceOf(name) {
 
 function updateMeAvatar() {
   if (el.meAvatar) paintAvatar(el.meAvatar, state.identity);
+  if (el.meName) el.meName.textContent = state.identity ? `@${state.identity}` : "未设置身份";
+  // Empty identity: open the editor so a first-time user has a way in.
+  if (!state.identity) setIdentityEditing(true, false);
+}
+
+function setIdentityEditing(editing, focus = true) {
+  if (!el.sideFoot) return;
+  el.sideFoot.classList.toggle("editing", editing);
+  if (el.meEdit) el.meEdit.setAttribute("aria-expanded", String(editing));
+  if (editing && focus && el.identity) {
+    el.identity.focus();
+    el.identity.select();
+  }
 }
 
 function lastMessageForTopic(topic) {
@@ -520,6 +537,12 @@ function renderRooms() {
     }
 
     button.append(text, side);
+    button.title = room.label;
+    button.setAttribute(
+      "aria-label",
+      unread > 0 ? `${room.label}，${unread} 条未读` : room.label,
+    );
+    if (room.id === state.activeTopic) button.setAttribute("aria-current", "true");
     button.addEventListener("click", () => switchRoom(room.id));
     if (state.search && !button.dataset.name.includes(state.search)) button.hidden = true;
     fragment.append(button);
@@ -564,10 +587,13 @@ function renderPeople() {
     personName.textContent = labelOf(name);
     const status = document.createElement("span");
     status.className = `person-status${entry?.typing ? " typing" : entry?.online ? " online" : ""}`;
-    status.textContent = entry?.typing ? "正在输入…" : entry?.online ? "在线" : "离线";
+    const statusText = entry?.typing ? "正在输入…" : entry?.online ? "在线" : "离线";
+    status.textContent = statusText;
     text.append(personName, status);
 
     button.append(wrap, text);
+    button.title = `${labelOf(name)} · ${statusText}`;
+    button.setAttribute("aria-label", `${labelOf(name)}，${statusText}`);
     button.addEventListener("click", () => insertMention(name));
     if (state.search && !button.dataset.name.includes(state.search)) button.hidden = true;
     fragment.append(button);
@@ -1119,6 +1145,12 @@ function updateJumpBadge() {
   const count = state.newBelow;
   el.jumpCount.hidden = count <= 0;
   el.jumpCount.textContent = count > 99 ? "99+" : count > 0 ? String(count) : "";
+  if (el.jumpBtn) {
+    el.jumpBtn.setAttribute(
+      "aria-label",
+      count > 0 ? `回到底部，${count > 99 ? "99+" : count} 条新消息` : "回到底部，看最新消息",
+    );
+  }
 }
 
 function jumpToLatest() {
@@ -1426,6 +1458,33 @@ function toggleSidebar() {
   else openSidebar();
 }
 
+/* ---------- desktop sidebar rail (>=761px) ---------- */
+
+function sideCollapsed() {
+  return document.documentElement.classList.contains("side-collapsed");
+}
+
+function setSideCollapsed(collapsed, persist = true) {
+  document.documentElement.classList.toggle("side-collapsed", collapsed);
+  if (el.sideToggle) {
+    const label = collapsed ? "展开侧边栏" : "收起侧边栏";
+    el.sideToggle.setAttribute("aria-expanded", String(!collapsed));
+    el.sideToggle.setAttribute("aria-label", label);
+    el.sideToggle.title = label;
+  }
+  if (persist) {
+    try {
+      localStorage.setItem(SIDE_COLLAPSED_KEY, collapsed ? "1" : "0");
+    } catch {
+      /* storage can be unavailable (private mode); the toggle still works */
+    }
+  }
+}
+
+function toggleSideCollapsed() {
+  setSideCollapsed(!sideCollapsed());
+}
+
 function connect() {
   if (state.es) {
     state.es.close();
@@ -1624,6 +1683,10 @@ function bind() {
   el.connDot = $("conn-dot");
   el.connText = $("conn-text");
   el.meAvatar = $("me-avatar");
+  el.meName = $("me-name");
+  el.meEdit = $("me-edit");
+  el.sideFoot = document.querySelector(".side-foot");
+  el.sideToggle = $("side-toggle");
   el.tokenBtn = $("token-btn");
   el.sidebar = $("sidebar");
   el.scrim = $("scrim");
@@ -1653,6 +1716,10 @@ function bind() {
 
   $("composer").addEventListener("submit", sendMessage);
   el.menu.addEventListener("click", toggleSidebar);
+  el.sideToggle.addEventListener("click", toggleSideCollapsed);
+  // Sync aria/title with the state the early head script already applied;
+  // do not rewrite localStorage.
+  setSideCollapsed(sideCollapsed(), false);
   el.scrim.addEventListener("click", closeSidebar);
   el.search.addEventListener("input", () => applySearch(el.search.value));
   el.tokenBtn.addEventListener("click", () => showTokenModal());
@@ -1691,6 +1758,20 @@ function bind() {
       render();
       renderPeople();
       connect(); // re-register presence under the new identity
+    }
+  });
+  el.meEdit.addEventListener("click", () => setIdentityEditing(true));
+  el.identity.addEventListener("blur", () => setIdentityEditing(false, false));
+  el.identity.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      el.identity.blur(); // fires `change`, which validates and saves
+      setIdentityEditing(false, false);
+    } else if (event.key === "Escape") {
+      event.preventDefault();
+      el.identity.value = state.identity; // revert; same value = no change event
+      el.identity.blur();
+      setIdentityEditing(false, false);
     }
   });
   el.input.addEventListener("keydown", (event) => {
