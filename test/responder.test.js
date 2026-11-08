@@ -192,7 +192,11 @@ test("childEnv allowlist drops secrets and honors extras", () => {
   assert.equal(env.MSGHUB_TOKEN, undefined);
   assert.equal(env.AWS_SECRET_ACCESS_KEY, undefined);
   assert.equal(env.NODE_OPTIONS, "");
-  assert.ok(env.SystemRoot || env.windir || env.SystemDrive);
+  // At least one allowlisted variable exists on every platform (PATH on
+  // POSIX, SystemRoot/windir on Windows) and must be passed through verbatim.
+  const passed = ["SystemRoot", "windir", "SystemDrive", "PATH"].find((k) => process.env[k] !== undefined);
+  assert.ok(passed);
+  assert.equal(env[passed], process.env[passed]);
   delete process.env.MSGHUB_TOKEN;
   delete process.env.AWS_SECRET_ACCESS_KEY;
 });
